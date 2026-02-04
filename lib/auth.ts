@@ -33,6 +33,23 @@ export async function getAuth(
   opts: { bestEffort?: boolean } = {}
 ): Promise<AuthResult | null> {
   const token = getTokenFromHeaders(req.headers);
+  const url = new URL(req.url);
+  const uidParam = url.searchParams.get("uid");
+  const tokenParam = url.searchParams.get("token");
+  if (!token && opts.bestEffort && uidParam) {
+    return { uid: uidParam, email: null, verified: false };
+  }
+  if (!token && opts.bestEffort && tokenParam) {
+    const decoded = unsafeDecode(tokenParam);
+    if (decoded?.user_id || decoded?.uid) {
+      return {
+        uid: decoded.user_id || decoded.uid,
+        email: decoded.email,
+        decoded,
+        verified: false
+      };
+    }
+  }
   if (!token) return null;
 
   try {

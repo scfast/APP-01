@@ -16,8 +16,11 @@ export async function POST(req: Request) {
       return json({ error: "Missing file" }, { status: 400 });
     }
 
+    const requestedPath = form.get("storagePath") as string | null;
+    const description = form.get("description") as string | null;
     const buffer = Buffer.from(await file.arrayBuffer());
-    const storagePath = `uploads/${auth.uid}/${Date.now()}-${file.name}`;
+    const storagePath =
+      requestedPath || `uploads/${auth.uid}/${Date.now()}-${file.name}`;
     const upload = await uploadToStorage(storagePath, buffer, file.type);
 
     const db = await getDb();
@@ -38,6 +41,7 @@ export async function POST(req: Request) {
       ownerUid: auth.uid,
       ownerEmail: auth.email,
       filename: file.name,
+      description,
       storagePath: upload.storagePath,
       publicUrl: upload.publicUrl,
       status: "pending",

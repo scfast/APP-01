@@ -5,6 +5,7 @@ export function json(data: any, init: ResponseInit = {}) {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Credentials": "true",
       ...(init.headers || {})
     }
   });

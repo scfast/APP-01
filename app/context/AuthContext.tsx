@@ -21,6 +21,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, (next) => {
       setUser(next);
       setLoading(false);
+      if (next) {
+        next.getIdToken().then((token) => {
+          localStorage.setItem("idToken", token);
+          document.cookie = `token=${encodeURIComponent(token)}; path=/`;
+        });
+      }
     });
     return () => unsub();
   }, []);

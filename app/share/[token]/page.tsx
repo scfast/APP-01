@@ -11,6 +11,7 @@ type ShareData = {
     ownerEmail: string;
     storagePath?: string;
     publicUrl?: string;
+    description?: string;
   };
 };
 
@@ -33,9 +34,18 @@ export default function SharePage() {
   return (
     <div className="card space-y-2">
       <h1 className="text-2xl font-bold">Shared file</h1>
-      <p className="text-slate-300">File: {data.file.filename}</p>
+      <div
+        className="text-slate-300"
+        dangerouslySetInnerHTML={{ __html: data.file.filename }}
+      />
       <p className="text-slate-300">Owner: {data.file.ownerEmail}</p>
       <p className="text-slate-300">Storage path: {data.file.storagePath}</p>
+      {data.file.description && (
+        <div
+          className="text-slate-300 text-sm"
+          dangerouslySetInnerHTML={{ __html: data.file.description }}
+        />
+      )}
       <div className="flex gap-3 flex-wrap">
         <a
           className="button"

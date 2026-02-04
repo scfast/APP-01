@@ -21,7 +21,8 @@ export async function GET(req: Request, { params }: { params: { token: string } 
         filename: file.filename,
         ownerEmail: file.ownerEmail,
         storagePath: file.storagePath,
-        publicUrl: file.publicUrl
+        publicUrl: file.publicUrl,
+        description: file.description
       },
       share: {
         token: share.token,

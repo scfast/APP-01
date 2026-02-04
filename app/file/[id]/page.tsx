@@ -12,6 +12,7 @@ type FileItem = {
   ownerEmail: string;
   publicUrl?: string;
   storagePath?: string;
+  description?: string;
   createdAt: string;
 };
 
@@ -29,8 +30,16 @@ export default function FileDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const authedFetch = async (input: RequestInfo, init?: RequestInit) => {
-    const token = user ? await user.getIdToken() : "";
-    return fetch(input, {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("idToken") : "";
+    const token = user ? await user.getIdToken() : stored || "";
+    let url = typeof input === "string" ? input : input.toString();
+    if (!token && typeof window !== "undefined") {
+      const uid = new URLSearchParams(window.location.search).get("uid");
+      if (uid) {
+        url += url.includes("?") ? `&uid=${encodeURIComponent(uid)}` : `?uid=${encodeURIComponent(uid)}`;
+      }
+    }
+    return fetch(url, {
       ...init,
       headers: {
         ...(init?.headers || {}),
@@ -68,10 +77,19 @@ export default function FileDetailPage() {
   return (
     <div className="space-y-4">
       <div className="card space-y-2">
-        <h1 className="text-2xl font-bold">{file.filename}</h1>
+        <div
+          className="text-2xl font-bold"
+          dangerouslySetInnerHTML={{ __html: file.filename }}
+        />
         <p className="text-slate-300">Owner: {file.ownerEmail}</p>
         <p className="text-slate-300">Status: {file.status}</p>
         <p className="text-slate-300">Storage path: {file.storagePath}</p>
+        {file.description && (
+          <div
+            className="text-slate-300 text-sm"
+            dangerouslySetInnerHTML={{ __html: file.description }}
+          />
+        )}
         <div className="flex gap-3 flex-wrap">
           <a className="button" href={`/api/files/${file._id}/download`}>
             Download

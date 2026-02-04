@@ -20,8 +20,16 @@ export default function DashboardPage() {
   const [file, setFile] = useState<File | null>(null);
 
   const authedFetch = async (input: RequestInfo, init?: RequestInit) => {
-    const token = user ? await user.getIdToken() : "";
-    return fetch(input, {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("idToken") : "";
+    const token = user ? await user.getIdToken() : stored || "";
+    let url = typeof input === "string" ? input : input.toString();
+    if (!token && typeof window !== "undefined") {
+      const uid = new URLSearchParams(window.location.search).get("uid");
+      if (uid) {
+        url += url.includes("?") ? `&uid=${encodeURIComponent(uid)}` : `?uid=${encodeURIComponent(uid)}`;
+      }
+    }
+    return fetch(url, {
       ...init,
       headers: {
         ...(init?.headers || {}),
@@ -49,7 +57,8 @@ export default function DashboardPage() {
     setError(null);
     setMessage(null);
     if (!file) return;
-    const form = new FormData();
+    const formEl = e.currentTarget as HTMLFormElement;
+    const form = new FormData(formEl);
     form.append("file", file);
     try {
       const res = await authedFetch("/api/upload", {
@@ -84,6 +93,16 @@ export default function DashboardPage() {
 
       <form onSubmit={onUpload} className="card space-y-3">
         <h2 className="text-lg font-semibold">Upload PDF</h2>
+        <input
+          className="input"
+          placeholder="Optional storage path (advanced)"
+          name="storagePath"
+        />
+        <textarea
+          className="input min-h-[90px]"
+          placeholder="Notes (supports HTML)"
+          name="description"
+        />
         <input
           className="input"
           type="file"

@@ -58,12 +58,12 @@ All flaws are enabled by default and grouped in `lib/labFlaws.ts`.
 ### STRIDE-lite mapping table
 | Category | Example flaws in this app |
 | --- | --- |
-| Spoofing | Best-effort auth decoding; missing verification in some routes (`lib/auth.ts`, multiple API routes). |
-| Tampering | Status update trusts client-supplied `role`/`ownerUid` (`app/api/files/[id]/status`). |
+| Spoofing | Best-effort auth decoding; `?uid=` impersonation; token from query (`lib/auth.ts`). |
+| Tampering | Status update trusts client-supplied `role`/`ownerUid`; arbitrary storage path on upload (`app/api/files/[id]/status`, `app/api/upload`). |
 | Repudiation | Minimal/no audit logs; errors logged with sensitive context (`app/api/*`). |
-| Information Disclosure | Overfetching admin data; share endpoint leaks metadata; public Firebase URLs (`app/api/admin/*`, `app/api/share/[token]`). |
-| Denial of Service | No upload size limits, no rate limiting (`app/api/upload`). |
-| Elevation of Privilege | Admin endpoints lack server-side role checks (`app/api/admin/*`). |
+| Information Disclosure | Overfetching admin data; share endpoint leaks metadata; `/api/debug` returns env + data (`app/api/admin/*`, `app/api/share/[token]`, `app/api/debug`). |
+| Denial of Service | No upload size limits, regex search ReDoS risk (`app/api/upload`, `app/api/files/search`). |
+| Elevation of Privilege | Admin endpoints lack server-side role checks; user lookup IDOR (`app/api/admin/*`, `app/api/users/[uid]`). |
 
 ## Additional insecure behaviors (non-exhaustive)
 - Uploads accept any file type and size; server emits verbose errors.
@@ -71,6 +71,9 @@ All flaws are enabled by default and grouped in `lib/labFlaws.ts`.
 - Download endpoint does not enforce ownership.
 - Insecure storage rules and long-lived signed URLs.
 - Permissive CORS on all API routes.
+- Password reset reveals if an email exists.
+- HTML notes rendered unsafely in file views.
+- Account delete endpoint lacks CSRF protection.
 
 ## Notes
 This app is **for training only**. Do not deploy publicly.

@@ -21,8 +21,16 @@ export default function AdminPage() {
   const [role, setRole] = useState<string | null>(null);
 
   const authedFetch = async (input: RequestInfo, init?: RequestInit) => {
-    const token = user ? await user.getIdToken() : "";
-    return fetch(input, {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("idToken") : "";
+    const token = user ? await user.getIdToken() : stored || "";
+    let url = typeof input === "string" ? input : input.toString();
+    if (!token && typeof window !== "undefined") {
+      const uid = new URLSearchParams(window.location.search).get("uid");
+      if (uid) {
+        url += url.includes("?") ? `&uid=${encodeURIComponent(uid)}` : `?uid=${encodeURIComponent(uid)}`;
+      }
+    }
+    return fetch(url, {
       ...init,
       headers: {
         ...(init?.headers || {}),
