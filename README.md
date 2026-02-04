@@ -1,8 +1,8 @@
 # Dockyard Docs (Training / Intentionally Insecure)
 
-**TRAINING / INTENTIONALLY INSECURE — DO NOT DEPLOY**
+**TRAINING / INTENTIONALLY INSECURE, DO NOT DEPLOY**
 
-Dockyard Docs is a deliberately vulnerable Next.js app for a security workshop. It is designed to demonstrate STRIDE-lite threat modeling and Secure SDLC conversations. The flaws are enabled by default and should only be used in a controlled training environment.
+Dockyard Docs is a deliberately vulnerable Next.js app for a security workshop. It is designed to demonstrate STRIDE-lite threat modelling and Secure SDLC conversations. The flaws are enabled by default and should only be used in a controlled training environment.
 
 ## Safety gate
 The app refuses to start unless `TRAINING_MODE=true` is set in the environment.
@@ -20,6 +20,7 @@ The app refuses to start unless `TRAINING_MODE=true` is set in the environment.
 ```bash
 docker compose up -d
 ```
+or use an atlas connection string
 
 ### 2) Create a Firebase project
 1. Create a Firebase project.
@@ -65,9 +66,9 @@ All flaws are enabled by default and grouped in `lib/labFlaws.ts`.
 | Denial of Service | No upload size limits, regex search ReDoS risk (`app/api/upload`, `app/api/files/search`). |
 | Elevation of Privilege | Admin endpoints lack server-side role checks; user lookup IDOR (`app/api/admin/*`, `app/api/users/[uid]`). |
 
-## Additional insecure behaviors (non-exhaustive)
+## Additional insecure behaviours (non-exhaustive)
 - Uploads accept any file type and size; server emits verbose errors.
-- Share tokens are low entropy and expiry is ignored.
+- Share tokens are low entropy, and expiry is ignored.
 - Download endpoint does not enforce ownership.
 - Insecure storage rules and long-lived signed URLs.
 - Permissive CORS on all API routes.
