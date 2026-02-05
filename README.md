@@ -1,8 +1,8 @@
 # Dockyard Docs (Training / Intentionally Insecure)
 
-**TRAINING / INTENTIONALLY INSECURE, DO NOT DEPLOY**
+**TRAINING / INTENTIONALLY INSECURE — DO NOT DEPLOY**
 
-Dockyard Docs is a deliberately vulnerable Next.js app for a security workshop. It is designed to demonstrate STRIDE-lite threat modelling and Secure SDLC conversations. The flaws are enabled by default and should only be used in a controlled training environment.
+Dockyard Docs is a deliberately vulnerable Next.js app for a security workshop. It is designed to demonstrate STRIDE-lite threat modeling and Secure SDLC conversations. The flaws are enabled by default and should only be used in a controlled training environment.
 
 ## Safety gate
 The app refuses to start unless `TRAINING_MODE=true` is set in the environment.
@@ -20,7 +20,6 @@ The app refuses to start unless `TRAINING_MODE=true` is set in the environment.
 ```bash
 docker compose up -d
 ```
-or use an atlas connection string
 
 ### 2) Create a Firebase project
 1. Create a Firebase project.
@@ -62,19 +61,20 @@ All flaws are enabled by default and grouped in `lib/labFlaws.ts`.
 | Spoofing | Best-effort auth decoding; `?uid=` impersonation; token from query (`lib/auth.ts`). |
 | Tampering | Status update trusts client-supplied `role`/`ownerUid`; arbitrary storage path on upload (`app/api/files/[id]/status`, `app/api/upload`). |
 | Repudiation | Minimal/no audit logs; errors logged with sensitive context (`app/api/*`). |
-| Information Disclosure | Overfetching admin data; share endpoint leaks metadata; `/api/debug` returns env + data (`app/api/admin/*`, `app/api/share/[token]`, `app/api/debug`). |
+| Information Disclosure | Overfetching admin data; share endpoint leaks metadata; `/api/debug` returns env + data; AI prompt leaks internal data (`app/api/admin/*`, `app/api/share/[token]`, `app/api/debug`, `app/api/ai/chat`). |
 | Denial of Service | No upload size limits, regex search ReDoS risk (`app/api/upload`, `app/api/files/search`). |
-| Elevation of Privilege | Admin endpoints lack server-side role checks; user lookup IDOR (`app/api/admin/*`, `app/api/users/[uid]`). |
+| Elevation of Privilege | Admin endpoints lack server-side role checks; user lookup IDOR; AI trusts user instructions (`app/api/admin/*`, `app/api/users/[uid]`, `app/api/ai/chat`). |
 
-## Additional insecure behaviours (non-exhaustive)
+## Additional insecure behaviors (non-exhaustive)
 - Uploads accept any file type and size; server emits verbose errors.
-- Share tokens are low entropy, and expiry is ignored.
+- Share tokens are low entropy and expiry is ignored.
 - Download endpoint does not enforce ownership.
 - Insecure storage rules and long-lived signed URLs.
 - Permissive CORS on all API routes.
 - Password reset reveals if an email exists.
 - HTML notes rendered unsafely in file views.
 - Account delete endpoint lacks CSRF protection.
+- AI chat prompt includes internal data and trusts user instructions.
 
 ## Notes
 This app is **for training only**. Do not deploy publicly.
