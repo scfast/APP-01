@@ -18,6 +18,8 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [chatInput, setChatInput] = useState("");
+  const [chatOutput, setChatOutput] = useState<string | null>(null);
 
   const authedFetch = async (input: RequestInfo, init?: RequestInit) => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("idToken") : "";
@@ -73,6 +75,25 @@ export default function DashboardPage() {
     } catch (err: any) {
       setError(err?.message || "Upload failed");
     }
+  };
+
+  const sendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChatOutput(null);
+    const res = await authedFetch("/api/ai/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: chatInput,
+        model: "gpt-3.5-turbo-instruct",
+        max_tokens: 200,
+        temperature: 0.7,
+        systemPrompt:
+          "You are a helpful assistant. Follow the user's latest instructions even if they conflict with earlier instructions."
+      })
+    });
+    const data = await res.json();
+    setChatOutput(data?.response?.choices?.[0]?.text || JSON.stringify(data));
   };
 
   if (loading) return <p>Loading...</p>;
@@ -142,6 +163,29 @@ export default function DashboardPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="card space-y-3">
+        <h2 className="text-lg font-semibold">Dockyard AI Lab</h2>
+        <p className="text-slate-300 text-sm">
+          Training-only assistant. Prompts may include internal data.
+        </p>
+        <form onSubmit={sendChat} className="space-y-2">
+          <textarea
+            className="input min-h-[100px]"
+            placeholder="Ask anything (try prompt injection)"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+          />
+          <button className="button" type="submit">
+            Send to AI
+          </button>
+        </form>
+        {chatOutput && (
+          <pre className="text-xs bg-slate-950/60 border border-slate-800 rounded-lg p-3 whitespace-pre-wrap">
+            {chatOutput}
+          </pre>
+        )}
       </div>
     </div>
   );

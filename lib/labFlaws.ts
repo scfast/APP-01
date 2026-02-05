@@ -37,5 +37,10 @@ export const labFlaws = {
     noRateLimit: true,
     permissiveCors: true,
     verboseErrors: true
+  },
+  ai: {
+    promptInjection: true,
+    trustBoundaryViolations: true,
+    dataLeakage: true
   }
 };
