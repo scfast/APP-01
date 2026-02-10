@@ -28,8 +28,11 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en">
-      <body className={`${spaceGrotesk.variable} ${plusJakarta.variable}`}>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className={`${spaceGrotesk.variable} ${plusJakarta.variable}`}
+      >
         <div className="banner">
           TRAINING / INTENTIONALLY INSECURE — DO NOT DEPLOY
         </div>
