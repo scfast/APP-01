@@ -103,6 +103,9 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Your Dockyard</h1>
         <div className="flex gap-2">
+          <Link className="button-muted" href="/lab">
+            ZAP practice lab
+          </Link>
           <Link className="button-muted" href="/admin">
             Admin review
           </Link>

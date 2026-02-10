@@ -43,6 +43,9 @@ export default function HomePage() {
             <Link className="button-muted" href="/login">
               Log in
             </Link>
+            <Link className="button-muted" href="/lab">
+              ZAP practice lab
+            </Link>
             <Link className="button-muted" href="/dashboard">
               Go to dashboard
             </Link>
