@@ -45,9 +45,11 @@ function sanitizeConfig(doc: any): LabConfig {
   return merged;
 }
 
+type LabConfigDoc = LabConfig & { _id: string; updatedAt?: Date };
+
 export async function getLabConfig(): Promise<LabConfig> {
   const db = await getDb();
-  const collection = db.collection("lab_config");
+  const collection = db.collection<LabConfigDoc>("lab_config");
   const doc = await collection.findOne({ _id: "default" });
   if (!doc) {
     await collection.insertOne({
@@ -70,7 +72,7 @@ export async function updateLabConfig(
     }
   }
   const db = await getDb();
-  const collection = db.collection("lab_config");
+  const collection = db.collection<LabConfigDoc>("lab_config");
   await collection.updateOne(
     { _id: "default" },
     { $set: { ...updates, updatedAt: new Date() } },
@@ -81,7 +83,7 @@ export async function updateLabConfig(
 
 export async function resetLabConfig(): Promise<LabConfig> {
   const db = await getDb();
-  const collection = db.collection("lab_config");
+  const collection = db.collection<LabConfigDoc>("lab_config");
   await collection.updateOne(
     { _id: "default" },
     { $set: { ...defaultConfig, updatedAt: new Date() } },
