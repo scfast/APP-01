@@ -65,7 +65,7 @@ jobs:
       - name: ZAP Full Scan
         id: zap_scan
         continue-on-error: true
-        uses: zaproxy/action-full-scan@v0.12.0
+        uses: zaproxy/action-full-scan@v0.13.0
         env:
           ZAP_AUTH_HEADER: ${{ steps.auth.outputs.header }}
           ZAP_AUTH_HEADER_VALUE: ${{ steps.auth.outputs.value }}
