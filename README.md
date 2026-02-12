@@ -85,6 +85,9 @@ A scheduled and on-demand ZAP baseline workflow is included at:
 What it does:
 - Runs every Monday at 09:00 UTC and on manual trigger (`workflow_dispatch`).
 - Scans `https://app01.inceptionu-webinar.com` with OWASP ZAP baseline defaults.
+- Manual runs support:
+  - `severity_threshold`: `critical`, `high`, `medium`, `low`, `informational`
+  - `enforcement`: `fail` or `warn`
 
 ### OWASP ZAP full scan (manual, optional authenticated mode)
 A deeper manual workflow is included at:
@@ -92,7 +95,11 @@ A deeper manual workflow is included at:
 
 How to use:
 1. In GitHub, go to `Actions` -> `OWASP ZAP Full Scan (Authenticated)` -> `Run workflow`.
-2. Provide the `target` URL and choose whether `fail_on_warning` should be enabled.
+2. Provide the `target` URL.
+3. Choose a `severity_threshold` (`critical`, `high`, `medium`, `low`, or `informational`).
+4. Choose `enforcement` mode:
+   - `fail`: fail the workflow when findings meet/exceed the selected threshold.
+   - `warn`: add a GitHub warning annotation but keep the workflow successful.
 
 Authentication options (via repository secrets):
 - Preferred: set `ZAP_AUTH_BEARER_TOKEN` (sent as `Authorization: Bearer <token>`).

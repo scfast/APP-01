@@ -7,11 +7,25 @@ on:
         description: "Target URL to scan"
         required: true
         default: "https://app01.inceptionu-webinar.com"
-      fail_on_warning:
-        description: "Fail build on ZAP warnings"
+      severity_threshold:
+        description: "Lowest severity that should trigger enforcement"
         required: true
-        type: boolean
-        default: false
+        type: choice
+        options:
+          - critical
+          - high
+          - medium
+          - low
+          - informational
+        default: high
+      enforcement:
+        description: "Whether matching findings should warn or fail"
+        required: true
+        type: choice
+        options:
+          - fail
+          - warn
+        default: fail
 
 permissions:
   contents: read
@@ -20,6 +34,9 @@ permissions:
 jobs:
   zap-full-auth:
     runs-on: ubuntu-latest
+    env:
+      SEVERITY_THRESHOLD: ${{ github.event.inputs.severity_threshold || 'high' }}
+      ENFORCEMENT: ${{ github.event.inputs.enforcement || 'fail' }}
     steps:
       - name: Build auth header from secrets
         id: auth
@@ -46,6 +63,8 @@ jobs:
           fi
 
       - name: ZAP Full Scan
+        id: zap_scan
+        continue-on-error: true
         uses: zaproxy/action-full-scan@v0.12.0
         env:
           ZAP_AUTH_HEADER: ${{ steps.auth.outputs.header }}
@@ -54,6 +73,75 @@ jobs:
         with:
           target: ${{ github.event.inputs.target }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          cmd_options: "--autooff"
-          fail_action: true
-          fail_on_warning: ${{ github.event.inputs.fail_on_warning }}
+          fail_action: false
+
+      - name: Enforce ZAP severity policy
+        if: always()
+        env:
+          ZAP_STEP_OUTCOME: ${{ steps.zap_scan.outcome }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const rank = {
+            informational: 0,
+            low: 1,
+            medium: 2,
+            high: 3,
+            critical: 4
+          };
+
+          const threshold = (process.env.SEVERITY_THRESHOLD || 'high').toLowerCase();
+          const enforcement = (process.env.ENFORCEMENT || 'fail').toLowerCase();
+          const zapOutcome = process.env.ZAP_STEP_OUTCOME;
+
+          if (zapOutcome !== 'success') {
+            console.error(`ZAP scan step did not complete successfully (outcome: ${zapOutcome}).`);
+            process.exit(1);
+          }
+
+          if (!fs.existsSync('report_json.json')) {
+            console.error('report_json.json not found; cannot enforce severity policy.');
+            process.exit(1);
+          }
+
+          const report = JSON.parse(fs.readFileSync('report_json.json', 'utf8'));
+          const sites = Array.isArray(report.site) ? report.site : [];
+          const alerts = sites.flatMap((site) => (Array.isArray(site.alerts) ? site.alerts : []));
+
+          const normalizeSeverity = (alert) => {
+            const values = [alert?.risk, alert?.riskdesc, alert?.riskcode]
+              .filter((v) => v !== undefined && v !== null)
+              .map((v) => String(v).toLowerCase());
+
+            if (values.some((v) => v.includes('critical') || v === '4')) return 'critical';
+            if (values.some((v) => v.includes('high') || v === '3')) return 'high';
+            if (values.some((v) => v.includes('medium') || v.includes('med') || v === '2')) return 'medium';
+            if (values.some((v) => v.includes('low') || v === '1')) return 'low';
+            return 'informational';
+          };
+
+          const counts = { critical: 0, high: 0, medium: 0, low: 0, informational: 0 };
+          for (const alert of alerts) {
+            const sev = normalizeSeverity(alert);
+            counts[sev] += 1;
+          }
+
+          const thresholdRank = rank[threshold] ?? rank.high;
+          const flagged = Object.entries(counts).reduce((acc, [sev, count]) => {
+            return acc + (rank[sev] >= thresholdRank ? count : 0);
+          }, 0);
+
+          const summary = `ZAP findings by severity: critical=${counts.critical}, high=${counts.high}, medium=${counts.medium}, low=${counts.low}, informational=${counts.informational}. Threshold=${threshold}, enforcement=${enforcement}, matched=${flagged}.`;
+          console.log(summary);
+
+          if (flagged > 0) {
+            if (enforcement === 'warn') {
+              console.log(`::warning::${summary}`);
+              process.exit(0);
+            }
+
+            console.error(`Policy violation: ${flagged} finding(s) matched threshold ${threshold}.`);
+            process.exit(1);
+          }
+          NODE
