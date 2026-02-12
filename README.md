@@ -76,5 +76,28 @@ All flaws are enabled by default and grouped in `lib/labFlaws.ts`.
 - Account delete endpoint lacks CSRF protection.
 - AI chat prompt includes internal data and trusts user instructions.
 
+## Supply Chain and CI Security (GitHub)
+
+### OWASP ZAP baseline scan (already added in this repo)
+A scheduled and on-demand ZAP baseline workflow is included at:
+- `.github/workflows/zap-baseline.yml`
+
+What it does:
+- Runs every Monday at 09:00 UTC and on manual trigger (`workflow_dispatch`).
+- Scans `https://app01.inceptionu-webinar.com` with OWASP ZAP baseline defaults.
+
+### Enable CodeQL via GitHub UI
+1. Open the repository on GitHub.
+2. Go to `Security` -> `Code scanning`.
+3. Click `Set up code scanning`, then choose `CodeQL analysis`.
+4. Select the `Default` setup for JavaScript/TypeScript.
+5. Commit the generated workflow to your default branch.
+
+### Enable Dependabot via GitHub UI
+1. Open the repository on GitHub.
+2. Go to `Security` -> `Dependabot`.
+3. Enable `Dependabot alerts` and `Dependabot security updates` when prompted.
+4. For version update PRs, use the Dependabot UI prompt to create a `dependabot.yml` in `.github/dependabot.yml`, then commit it.
+
 ## Notes
 This app is **for training only**. Do not deploy publicly.
