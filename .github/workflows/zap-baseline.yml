@@ -18,3 +18,5 @@ jobs:
         with:
           target: "https://app01.inceptionu-webinar.com"
           token: ${{ secrets.GITHUB_TOKEN }}
+          cmd_options: "--autooff"
+          fail_action: true
