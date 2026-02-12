@@ -127,4 +127,4 @@ Authentication options (via repository secrets):
 5. Optionally enable `Validity checks` (if available on your plan) to help prioritize real credential leaks.
 
 ## Notes
-This app is **for training only**. Do not deploy publicly.
+This app is **for training only**. Do not deploy publicly. This will be a very bad idea!!
