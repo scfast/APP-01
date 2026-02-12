@@ -1,0 +1,59 @@
+name: OWASP ZAP Full Scan (Authenticated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Target URL to scan"
+        required: true
+        default: "https://app01.inceptionu-webinar.com"
+      fail_on_warning:
+        description: "Fail build on ZAP warnings"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  zap-full-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build auth header from secrets
+        id: auth
+        shell: bash
+        env:
+          ZAP_AUTH_BEARER_TOKEN: ${{ secrets.ZAP_AUTH_BEARER_TOKEN }}
+          ZAP_AUTH_USERNAME: ${{ secrets.ZAP_AUTH_USERNAME }}
+          ZAP_AUTH_PASSWORD: ${{ secrets.ZAP_AUTH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "${ZAP_AUTH_BEARER_TOKEN:-}" ]; then
+            echo "header=Authorization" >> "$GITHUB_OUTPUT"
+            echo "value=Bearer ${ZAP_AUTH_BEARER_TOKEN}" >> "$GITHUB_OUTPUT"
+            echo "Using bearer token authentication"
+          elif [ -n "${ZAP_AUTH_USERNAME:-}" ] && [ -n "${ZAP_AUTH_PASSWORD:-}" ]; then
+            BASIC_VALUE="$(printf '%s:%s' "$ZAP_AUTH_USERNAME" "$ZAP_AUTH_PASSWORD" | base64 | tr -d '\n')"
+            echo "header=Authorization" >> "$GITHUB_OUTPUT"
+            echo "value=Basic ${BASIC_VALUE}" >> "$GITHUB_OUTPUT"
+            echo "Using basic authentication"
+          else
+            echo "No auth secrets found; scan will run unauthenticated"
+            echo "header=" >> "$GITHUB_OUTPUT"
+            echo "value=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.12.0
+        env:
+          ZAP_AUTH_HEADER: ${{ steps.auth.outputs.header }}
+          ZAP_AUTH_HEADER_VALUE: ${{ steps.auth.outputs.value }}
+          ZAP_AUTH_HEADER_SITE: ${{ github.event.inputs.target }}
+        with:
+          target: ${{ github.event.inputs.target }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          cmd_options: "--autooff"
+          fail_action: true
+          fail_on_warning: ${{ github.event.inputs.fail_on_warning }}

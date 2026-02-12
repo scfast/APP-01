@@ -86,6 +86,19 @@ What it does:
 - Runs every Monday at 09:00 UTC and on manual trigger (`workflow_dispatch`).
 - Scans `https://app01.inceptionu-webinar.com` with OWASP ZAP baseline defaults.
 
+### OWASP ZAP full scan (manual, optional authenticated mode)
+A deeper manual workflow is included at:
+- `.github/workflows/zap-full-auth.yml`
+
+How to use:
+1. In GitHub, go to `Actions` -> `OWASP ZAP Full Scan (Authenticated)` -> `Run workflow`.
+2. Provide the `target` URL and choose whether `fail_on_warning` should be enabled.
+
+Authentication options (via repository secrets):
+- Preferred: set `ZAP_AUTH_BEARER_TOKEN` (sent as `Authorization: Bearer <token>`).
+- Alternative: set both `ZAP_AUTH_USERNAME` and `ZAP_AUTH_PASSWORD` (sent as HTTP Basic auth header).
+- If none of the above are set, the scan runs unauthenticated.
+
 ### Enable CodeQL via GitHub UI
 1. Open the repository on GitHub.
 2. Go to `Security` -> `Code scanning`.
