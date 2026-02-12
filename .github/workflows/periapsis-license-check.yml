@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   periapsis:
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,7 +26,30 @@ jobs:
         run: npm ci
 
       - name: Run Periapsis policy check
+        id: periapsis
+        continue-on-error: true
         run: npx periapsis --allowed allowedConfig.json --violations-out sbom-violations.json
+
+      - name: Enforce zero violations
+        if: always()
+        run: |
+          if [ "${{ steps.periapsis.outcome }}" != "success" ]; then
+            echo "Periapsis command failed."
+            exit 1
+          fi
+
+          if [ ! -f sbom-violations.json ]; then
+            echo "sbom-violations.json was not generated."
+            exit 1
+          fi
+
+          VIOLATION_COUNT=$(node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('sbom-violations.json','utf8'));const count=Array.isArray(d)?d.length:(Array.isArray(d?.violations)?d.violations.length:0);process.stdout.write(String(count));")
+          echo "Detected violations: ${VIOLATION_COUNT}"
+
+          if [ "${VIOLATION_COUNT}" -gt 0 ]; then
+            echo "License policy violations detected."
+            exit 1
+          fi
 
       - name: Upload violations report
         if: always()
